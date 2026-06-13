@@ -35,4 +35,49 @@ final class AzureNativeSignedUrlTest extends TestCase
         self::assertStringContainsString('media/uploads/file.jpg', $url);
         self::assertStringContainsString('sig=', $url);
     }
+
+    public function testTemporaryUrlClampsTtlToConfiguredMaximum(): void
+    {
+        $before = time();
+        $url = (new AzureStorageDriverFactory())->temporaryUrl(
+            'uploads/file.jpg',
+            999999,
+            [
+                'container' => 'media',
+                'connection_string' => AzureStorageDriverFactoryTest::devConnectionString(),
+                'max_signed_ttl' => 900,
+            ]
+        );
+
+        self::assertIsString($url);
+        parse_str((string) parse_url($url, PHP_URL_QUERY), $query);
+        self::assertArrayHasKey('se', $query);
+
+        $expiresAt = strtotime((string) $query['se']);
+        self::assertIsInt($expiresAt);
+        self::assertLessThanOrEqual($before + 1200, $expiresAt);
+    }
+
+    public function testTemporaryUrlClampsConfiguredDefaultTtlToMaximum(): void
+    {
+        $before = time();
+        $url = (new AzureStorageDriverFactory())->temporaryUrl(
+            'uploads/file.jpg',
+            0,
+            [
+                'container' => 'media',
+                'connection_string' => AzureStorageDriverFactoryTest::devConnectionString(),
+                'signed_ttl' => 999999,
+                'max_signed_ttl' => 900,
+            ]
+        );
+
+        self::assertIsString($url);
+        parse_str((string) parse_url($url, PHP_URL_QUERY), $query);
+        self::assertArrayHasKey('se', $query);
+
+        $expiresAt = strtotime((string) $query['se']);
+        self::assertIsInt($expiresAt);
+        self::assertLessThanOrEqual($before + 1200, $expiresAt);
+    }
 }

@@ -24,6 +24,7 @@ Add a disk under `config/storage.php`:
     'connection_string' => env('AZURE_STORAGE_CONNECTION_STRING'),
     'prefix' => env('AZURE_STORAGE_PREFIX', ''),
     'signed_ttl' => (int) env('AZURE_SIGNED_URL_TTL', 3600),
+    'max_signed_ttl' => (int) env('AZURE_MAX_SIGNED_URL_TTL', 86400),
 ],
 ```
 
@@ -34,6 +35,7 @@ AZURE_STORAGE_CONTAINER=media
 AZURE_STORAGE_CONNECTION_STRING=DefaultEndpointsProtocol=https;AccountName=...
 AZURE_STORAGE_PREFIX=
 AZURE_SIGNED_URL_TTL=3600
+AZURE_MAX_SIGNED_URL_TTL=86400
 ```
 
 `connection_string` is used for filesystem construction and native SAS URL
@@ -51,6 +53,8 @@ carry over unchanged.
 If an application already builds its own Flysystem adapter, it may still pass a
 prebuilt `adapter` instance in the disk config. The provider pack wraps that
 adapter directly and does not require a connection string for that escape hatch.
+This is an advanced/test seam for programmatic configuration, not the normal
+production configuration path.
 
 ## Native URLs
 
@@ -75,6 +79,8 @@ Direct provider URLs are opt-in and visibility-scoped:
 Private native URLs are bearer tokens from Azure Blob Storage. Keep them
 short-lived and prefer the app-signed URL when application-side authorization
 or revocation matters.
+Direct provider URL TTLs are clamped by the disk's `max_signed_ttl` value, which
+defaults to 86400 seconds.
 
 ## Diagnostics
 
