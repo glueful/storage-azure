@@ -115,7 +115,7 @@ class AzureStorageDriverFactory implements
         }
 
         try {
-            $seconds = $ttl > 0 ? $ttl : (int) ($diskConfig['signed_ttl'] ?? 3600);
+            $seconds = $this->signedUrlTtl($ttl, $diskConfig);
             $prefix = (string) ($diskConfig['prefix'] ?? '');
             $blob = $prefix !== ''
                 ? rtrim($prefix, '/') . '/' . ltrim($path, '/')
@@ -132,6 +132,17 @@ class AzureStorageDriverFactory implements
         } catch (\Throwable) {
             return null;
         }
+    }
+
+    /**
+     * @param array<string, mixed> $config
+     */
+    private function signedUrlTtl(int $ttl, array $config): int
+    {
+        $seconds = $ttl > 0 ? $ttl : (int) ($config['signed_ttl'] ?? 3600);
+        $max = (int) ($config['max_signed_ttl'] ?? 86400);
+
+        return max(1, min($seconds, max(1, $max)));
     }
 
     /**

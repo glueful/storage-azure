@@ -7,5 +7,6 @@ return [
         'connection_string' => env('AZURE_STORAGE_CONNECTION_STRING', ''),
         'prefix' => env('AZURE_STORAGE_PREFIX', ''),
         'signed_ttl' => (int) env('AZURE_SIGNED_URL_TTL', 3600),
+        'max_signed_ttl' => (int) env('AZURE_MAX_SIGNED_URL_TTL', 86400),
     ],
 ];
